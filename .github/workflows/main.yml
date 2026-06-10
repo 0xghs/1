@@ -1,4 +1,4 @@
-name: RDP
+name: Build
 
 on:
   workflow_dispatch:
@@ -50,8 +50,12 @@ jobs:
           Remove-Item $installerPath -Force
 
       - name: Establish Tailscale Connection
+        env:
+          TAILSCALE_AUTHKEY: ${{ secrets.TAILSCALE_AUTHKEY }}
         run: |
-          & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=tskey-auth-kbHjJhioPc11CNTRL-Ves8mmL9zw6Aw363CAVSx6QFMJrrpinc --hostname=gh-runner-$env:GITHUB_RUN_ID
+          & "$env:ProgramFiles\Tailscale\tailscale.exe" up `
+            --authkey=$env:TAILSCALE_AUTHKEY `
+            --hostname=gh-runner-$env:GITHUB_RUN_ID
 
           $tsIP = $null
           $retries = 0
@@ -65,6 +69,7 @@ jobs:
               Write-Error "Tailscale IP not assigned. Exiting."
               exit 1
           }
+
           echo "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
 
       - name: Verify RDP Accessibility
